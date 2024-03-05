@@ -1,4 +1,8 @@
 import {Server} from "socket.io"
+import { Redis } from "ioredis"
+
+const pub=new Redis()
+const sub=new Redis()
 
 class SocketService{
     private _io:Server
