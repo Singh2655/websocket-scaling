@@ -1,8 +1,18 @@
 import {Server} from "socket.io"
-import { Redis } from "ioredis"
+import Redis from "ioredis"
 
-const pub=new Redis()
-const sub=new Redis()
+const pub=new Redis({
+    host:"redis-3d1e9504-gamerdragion-e24e.a.aivencloud.com",
+    port:23122,
+    username:"default",
+    password:"AVNS_2s97vfw5SB5J0zS1WH5",
+})
+const sub=new Redis({
+    host:"redis-3d1e9504-gamerdragion-e24e.a.aivencloud.com",
+    port:23122,
+    username:"default",
+    password:"AVNS_2s97vfw5SB5J0zS1WH5",
+})
 
 // test commit
 class SocketService{
@@ -15,6 +25,7 @@ class SocketService{
                 origin:'*'
             }
         })
+        sub.subscribe("MESSAGES")
     }
 
     public initListeners(){
@@ -24,7 +35,13 @@ class SocketService{
             console.log(`New socket connected ${socket.id}`)
             socket.on('event:message',async({message}:{message:string})=>{
                 console.log('New Message recieved:',message)
+                await pub.publish("MESSAGES",JSON.stringify({message}))
             })
+        })
+        sub.on("message",(channel,message)=>{
+            if(channel==="MESSAGES"){{
+                io.emit("message",message)
+            }}
         })
     }
 
