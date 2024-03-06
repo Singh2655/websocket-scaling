@@ -1,5 +1,6 @@
 import {Server} from "socket.io"
 import Redis from "ioredis"
+import prismaClient from "./prisma"
 
 const pub=new Redis({
     host:"redis-3d1e9504-gamerdragion-e24e.a.aivencloud.com",
@@ -38,9 +39,14 @@ class SocketService{
                 await pub.publish("MESSAGES",JSON.stringify({message}))
             })
         })
-        sub.on("message",(channel,message)=>{
+        sub.on("message",async(channel,message)=>{
             if(channel==="MESSAGES"){{
                 io.emit("message",message)
+                await prismaClient.message.create({
+                    data:{
+                        text:message
+                    }
+                })
             }}
         })
     }
