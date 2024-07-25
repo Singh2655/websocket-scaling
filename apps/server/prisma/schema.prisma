@@ -13,10 +13,19 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Message{
-  id String @id @default(uuid())
-  text String
-  createdAt DateTime @default(now()) @map("created_at")
+model ChatRoom {
+  id        Int       @id @default(autoincrement())
+  name      String    @unique
+  messages  Message[]
+  createdAt DateTime  @default(now())
+}
 
-  @@map("messages")
+model Message {
+  id         Int      @id @default(autoincrement())
+  content    String
+  chatRoomId Int
+  chatRoom   ChatRoom @relation(fields: [chatRoomId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@index([chatRoomId], name: "chatRoomId_index")
 }
