@@ -1,13 +1,14 @@
 "use client";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSocket } from "../../../context/socket-providers";
 import { useParams } from "next/navigation";
 
 const ChatRoom = () => {
   const params = useParams<{ chatid: string }>();
   const chatid = params.chatid;
-  const { messages, sendMessage } = useSocket();
+  const { messages, sendMessage, setChatName } = useSocket();
   const [message, setMessage] = useState("");
+  useEffect(() => setChatName(chatid), [chatid, setChatName]);
   return (
     <div className="flex flex-col items-center p-6 bg-gray-100 min-h-screen">
       <h1 className="text-2xl font-bold mb-4">Welcome to {chatid}</h1>

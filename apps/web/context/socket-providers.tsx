@@ -1,6 +1,7 @@
 "use client";
 import React, { useCallback, useContext, useEffect, useState } from "react";
 import { io, Socket } from "socket.io-client";
+import { v4 as uuidv4 } from "uuid"; // Import UUID library
 
 interface SocketProviderProps {
   children?: React.ReactNode;
@@ -9,8 +10,8 @@ interface SocketProviderProps {
 interface ISocketContext {
   sendMessage: (msg: string) => void;
   messages: string[];
-  chatId: string;
-  setChatId: (chatId: string) => void;
+  chatName: string;
+  setChatName: (chatName: string) => void;
 }
 
 const SocketContext = React.createContext<ISocketContext | null>(null);
@@ -24,42 +25,42 @@ export const useSocket = () => {
 
 export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
   const [socket, setSocket] = useState<Socket>();
-  const [chatId, setChatId] = useState<string>("");
+  const [chatName, setChatName] = useState<string>("");
   const [messages, setMessages] = useState<string[]>([]);
 
   const sendMessage: ISocketContext["sendMessage"] = useCallback(
     (msg) => {
-      console.log("Send Message", msg, chatId);
+      console.log("Send Message", msg, chatName);
       if (socket) {
-        socket.emit("event:message", { message: msg, chatId });
+        socket.emit("event:message", { message: msg, chatName });
       }
     },
-    [socket]
+    [socket, chatName]
   );
 
   const onMessageRec = useCallback((msg: string) => {
     console.log("From Server Msg Rec", msg);
-    const { message } = JSON.parse(msg) as { message: string };
+    const message = JSON.parse(msg);
     setMessages((prev) => [...prev, message]);
   }, []);
 
   useEffect(() => {
     const _socket = io("http://localhost:8000");
-    console.log("this is chatId", chatId);
-    _socket.on(`message-${chatId}`, onMessageRec);
+    console.log("this is chatName", chatName);
+    _socket.on(`message-${chatName}`, onMessageRec);
 
     setSocket(_socket);
 
     return () => {
-      _socket.off(`message-${chatId}`, onMessageRec);
+      _socket.off(`message-${chatName}`, onMessageRec);
       _socket.disconnect();
       setSocket(undefined);
     };
-  }, [chatId]);
+  }, [chatName, setMessages]);
 
   return (
     <SocketContext.Provider
-      value={{ sendMessage, messages, chatId, setChatId }}
+      value={{ sendMessage, messages, chatName, setChatName }}
     >
       {children}
     </SocketContext.Provider>

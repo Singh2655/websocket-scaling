@@ -2,20 +2,21 @@ import { Server } from "socket.io";
 import Redis from "ioredis";
 import { PrismaClient } from "@prisma/client";
 import * as dotenv from "dotenv";
+import { produceMessage } from "./kafka";
 
 dotenv.config();
 
 const pub = new Redis({
-  host: "redis-14080.c250.eu-central-1-1.ec2.redns.redis-cloud.com",
+  host: process.env.REDIS_URI,
   port: 14080,
   username: "default",
-  password: "KTBa2pY4VZsQPa2cFOHmzaBS52sbTT9E",
+  password: process.env.REDIS_PASSWORD,
 });
 const sub = new Redis({
-  host: "redis-14080.c250.eu-central-1-1.ec2.redns.redis-cloud.com",
+  host: process.env.REDIS_URI,
   port: 14080,
   username: "default",
-  password: "KTBa2pY4VZsQPa2cFOHmzaBS52sbTT9E",
+  password: process.env.REDIS_PASSWORD,
 });
 
 const prisma = new PrismaClient();
@@ -82,16 +83,18 @@ class SocketService {
             }
 
             // Save the message in the database
-            const savedMessage = await prisma.message.create({
-              data: {
-                content: message,
-                chatRoomId: chatRoom.id,
-              },
-            });
+            // const savedMessage = await prisma.message.create({
+            //   data: {
+            //     content: message,
+            //     chatRoomId: chatRoom.id,
+            //   },
+            // });
 
             const channel = `MESSAGES-${chatRoom.name}`;
+            await pub.publish(channel, JSON.stringify(message));
+            await produceMessage(message, chatRoom.name, chatRoom.id);
+
             console.log("channel :", channel);
-            await pub.publish(channel, JSON.stringify(savedMessage));
 
             // Subscribe to the specific dynamic channel
             sub.subscribe(channel, (err, count) => {

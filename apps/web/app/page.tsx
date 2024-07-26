@@ -5,11 +5,11 @@ import { useSocket } from "../context/socket-providers";
 
 export default function Page() {
   const [room, setRoom] = useState("");
-  const { setChatId } = useSocket();
+  const { setChatName } = useSocket();
   const router = useRouter();
   const createRoom = () => {
     if (room.length === 0) return;
-    setChatId(room);
+    setChatName(room);
     router.replace(`/chat/${room}`);
   };
   return (
